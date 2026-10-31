@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { clearToken, readToken } from '../auth/storage';
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:2027';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:2028';
 
 export const api = axios.create({ baseURL });
 
@@ -18,7 +18,7 @@ api.interceptors.response.use(
   (error: unknown) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       const url = error.config?.url ?? '';
-      // El login fallido tambiÃ©n responde 401; no hay que expulsar de la pantalla.
+      // El login fallido también responde 401; no hay que expulsar de la pantalla.
       if (!url.includes('/auth/login')) {
         clearToken();
         if (window.location.pathname !== '/login') {
