@@ -1,4 +1,14 @@
 node_modules
 dist
-.env
+.vite
 *.local
+*.log
+npm-debug.log*
+
+.env
+.env.*
+!.env.example
+
+coverage
+*.tsbuildinfo
+.DS_Store
