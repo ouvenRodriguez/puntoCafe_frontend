@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { clearToken, readToken } from '../auth/storage';
 
-const baseURL = import.meta.env.VITE_API_URL || 'https://puntocafe.pixelia.com.co';
+const baseURL = 'https://puntocafe.pixelia.com.co';
 
 export const api = axios.create({ baseURL });
 
