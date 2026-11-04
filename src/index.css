@@ -2566,6 +2566,10 @@ h2,
   align-items: start;
 }
 
+.form-meta-row.is-single {
+  grid-template-columns: 1fr;
+}
+
 .field input[type='date'] {
   color-scheme: light;
 }

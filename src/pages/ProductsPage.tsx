@@ -858,7 +858,7 @@ function ProductDialog({
             </select>
           </label>
         </div>
-        <div className="form-meta-row">
+        <div className={showsExpiry(form.categoria) ? 'form-meta-row' : 'form-meta-row is-single'}>
           <label className="field">
             <span>Descripción</span>
             <input
