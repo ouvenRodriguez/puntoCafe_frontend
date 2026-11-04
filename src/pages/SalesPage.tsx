@@ -6,10 +6,12 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useHorizontalWheelScroll } from '../hooks/useHorizontalWheelScroll';
 import {
   CategoryIcon,
+  categoryLabel,
   expiryTone,
   FILTERS,
   formatExpiry,
   MoneyField,
+  showsExpiry,
   type Filter,
 } from './ProductsPage';
 
@@ -121,7 +123,13 @@ export function SalesPage() {
       lines.flatMap((line) => {
         const fresh = products.find((product) => product.id === line.product.id);
         if (!fresh || fresh.stock <= 0) return [];
-        if (fresh.fechaVencimiento && expiryTone(fresh.fechaVencimiento) === 'is-expired') return [];
+        if (
+          showsExpiry(fresh.categoria) &&
+          fresh.fechaVencimiento &&
+          expiryTone(fresh.fechaVencimiento) === 'is-expired'
+        ) {
+          return [];
+        }
         return [{ product: fresh, cantidad: Math.min(line.cantidad, fresh.stock) }];
       }),
     );
@@ -154,7 +162,11 @@ export function SalesPage() {
   function addProduct(product: Product) {
     setNotice('');
     setError('');
-    if (product.fechaVencimiento && expiryTone(product.fechaVencimiento) === 'is-expired') {
+    if (
+      showsExpiry(product.categoria) &&
+      product.fechaVencimiento &&
+      expiryTone(product.fechaVencimiento) === 'is-expired'
+    ) {
       setError(`${product.nombre} está vencido`);
       return;
     }
@@ -269,7 +281,7 @@ export function SalesPage() {
         </div>
 
         <div className="sale-menu-head">
-          <h2>{filter === 'Todos' ? 'Productos' : filter}</h2>
+          <h2>{filter === 'Todos' ? 'Productos' : categoryLabel(filter)}</h2>
           <span>
             {visible.length} {visible.length === 1 ? 'producto' : 'productos'}
           </span>
@@ -286,6 +298,7 @@ export function SalesPage() {
             const inCart = quantityOf(product.id);
             const noStock = product.stock <= 0;
             const expired =
+              showsExpiry(product.categoria) &&
               Boolean(product.fechaVencimiento) &&
               expiryTone(product.fechaVencimiento) === 'is-expired';
             const atLimit = inCart >= product.stock;
@@ -310,7 +323,7 @@ export function SalesPage() {
                   <span className="sale-photo">
                     {product.imagen ? <img src={product.imagen} alt="" /> : <span>Foto</span>}
                   </span>
-                  {product.fechaVencimiento ? (
+                  {showsExpiry(product.categoria) && product.fechaVencimiento ? (
                     <span className={`sale-expiry ${expiryTone(product.fechaVencimiento)}`.trim()}>
                       Vence {formatExpiry(product.fechaVencimiento)}
                     </span>
@@ -318,7 +331,7 @@ export function SalesPage() {
                 </span>
                 <span className="sale-copy">
                   <strong>{product.nombre}</strong>
-                  {product.linea ? <em>{product.linea}</em> : <em>{product.categoria}</em>}
+                  {product.linea ? <em>{product.linea}</em> : <em>{categoryLabel(product.categoria)}</em>}
                   <b>{statusLabel}</b>
                 </span>
                 {inCart > 0 ? <span className="sale-count">{inCart}</span> : null}

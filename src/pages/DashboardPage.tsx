@@ -22,7 +22,7 @@ import {
 import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import homeHeroBg from '../assets/home-hero-bg.jpg';
-import { expiryTone, formatExpiry } from './ProductsPage';
+import { expiryTone, formatExpiry, showsExpiry } from './ProductsPage';
 
 interface SaleItem {
   productoId: string;
@@ -49,6 +49,7 @@ interface ExpenseRow {
 interface ProductRow {
   id: string;
   nombre: string;
+  categoria?: string;
   costo: number;
   precioVenta: number;
   stock: number;
@@ -400,7 +401,7 @@ export function DashboardPage() {
     today.setHours(0, 0, 0, 0);
     return products
       .flatMap((item) => {
-        if (!item.fechaVencimiento) return [];
+        if (!showsExpiry(item.categoria ?? '') || !item.fechaVencimiento) return [];
         const tone = expiryTone(item.fechaVencimiento);
         if (tone !== 'is-expired' && tone !== 'is-soon') return [];
         const [year, month, day] = item.fechaVencimiento.split('-').map(Number);

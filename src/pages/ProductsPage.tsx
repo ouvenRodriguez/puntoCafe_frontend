@@ -28,10 +28,33 @@ const CATEGORIES = [
 type Category = (typeof CATEGORIES)[number];
 export type Filter = 'Todos' | Category;
 
+const CATEGORY_LABELS: Record<Category, string> = {
+  Café: 'Café',
+  'Jugos naturales': 'Jugos naturales',
+  Bebidas: 'Bebidas',
+  Fritos: 'Vitrina',
+  Mecato: 'Mecato',
+  Dulces: 'Dulces',
+  Lácteos: 'Lácteos',
+  Papelería: 'Papelería',
+  Aseo: 'Aseo',
+  Medicamentos: 'Medicamentos',
+};
+
 export const FILTERS: { id: Filter; label: string }[] = [
   { id: 'Todos', label: 'Todos' },
-  ...CATEGORIES.map((category) => ({ id: category, label: category })),
+  ...CATEGORIES.map((category) => ({ id: category, label: CATEGORY_LABELS[category] })),
 ];
+
+const NO_EXPIRY_CATEGORIES = new Set<string>(['Café', 'Jugos naturales', 'Fritos']);
+
+export function showsExpiry(categoria: string) {
+  return !NO_EXPIRY_CATEGORIES.has(categoria);
+}
+
+export function categoryLabel(categoria: string) {
+  return CATEGORY_LABELS[categoria as Category] ?? categoria;
+}
 
 interface Product {
   id: string;
@@ -245,7 +268,10 @@ export function ProductsPage() {
   const capital = products.reduce((total, product) => total + product.costo * product.stock, 0);
   const lowStock = products.filter((product) => product.stock <= product.stockMinimo).length;
   const expired = products.filter(
-    (product) => product.fechaVencimiento && expiryTone(product.fechaVencimiento) === 'is-expired',
+    (product) =>
+      showsExpiry(product.categoria) &&
+      product.fechaVencimiento &&
+      expiryTone(product.fechaVencimiento) === 'is-expired',
   ).length;
 
   return (
@@ -409,7 +435,7 @@ function ProductCard({
           </>
         )}
       </div>
-      {product.fechaVencimiento ? (
+      {showsExpiry(product.categoria) && product.fechaVencimiento ? (
         <p className={`product-expiry ${expiryTone(product.fechaVencimiento)}`.trim()}>
           Vence {formatExpiry(product.fechaVencimiento)}
         </p>
@@ -684,16 +710,18 @@ function ProductDialog({
       setTip({ field: 'stock', message: 'Rellena este campo para continuar' });
       return;
     }
-    if (!form.fechaVencimiento) {
-      setTip({ field: 'fechaVencimiento', message: 'Rellena este campo para continuar' });
-      return;
-    }
-    if (expiryTone(form.fechaVencimiento) === 'is-expired') {
-      setTip({
-        field: 'fechaVencimiento',
-        message: 'La fecha ya venció; elige una fecha de hoy en adelante',
-      });
-      return;
+    if (showsExpiry(form.categoria)) {
+      if (!form.fechaVencimiento) {
+        setTip({ field: 'fechaVencimiento', message: 'Rellena este campo para continuar' });
+        return;
+      }
+      if (expiryTone(form.fechaVencimiento) === 'is-expired') {
+        setTip({
+          field: 'fechaVencimiento',
+          message: 'La fecha ya venció; elige una fecha de hoy en adelante',
+        });
+        return;
+      }
     }
     if (form.precioVenta === '') {
       setTip({ field: 'precioVenta', message: 'Rellena este campo para continuar' });
@@ -718,7 +746,7 @@ function ProductDialog({
       nombre: form.nombre.trim(),
       categoria: form.categoria,
       linea: form.linea.trim(),
-      fechaVencimiento: form.fechaVencimiento,
+      fechaVencimiento: showsExpiry(form.categoria) ? form.fechaVencimiento : '',
       // Se guarda costo y venta por unidad.
       costo: valorUnitario > 0 ? valorUnitario : Number(form.costo),
       precioVenta: Number(form.precioVenta),
@@ -774,7 +802,9 @@ function ProductDialog({
               onChange={(event) => update('categoria', event.target.value as Category)}
             >
               {CATEGORIES.map((category) => (
-                <option key={category}>{category}</option>
+                <option key={category} value={category}>
+                  {CATEGORY_LABELS[category]}
+                </option>
               ))}
             </select>
           </label>
@@ -837,16 +867,18 @@ function ProductDialog({
               onChange={(event) => update('linea', event.target.value)}
             />
           </label>
-          <label className={tip?.field === 'fechaVencimiento' ? 'field has-tip' : 'field'}>
-            <span>Fecha de vencimiento</span>
-            <input
-              type="date"
-              min={new Date().toISOString().slice(0, 10)}
-              value={form.fechaVencimiento}
-              onChange={(event) => update('fechaVencimiento', event.target.value)}
-            />
-            {tip?.field === 'fechaVencimiento' ? <FieldTip>{tip.message}</FieldTip> : null}
-          </label>
+          {showsExpiry(form.categoria) ? (
+            <label className={tip?.field === 'fechaVencimiento' ? 'field has-tip' : 'field'}>
+              <span>Fecha de vencimiento</span>
+              <input
+                type="date"
+                min={new Date().toISOString().slice(0, 10)}
+                value={form.fechaVencimiento}
+                onChange={(event) => update('fechaVencimiento', event.target.value)}
+              />
+              {tip?.field === 'fechaVencimiento' ? <FieldTip>{tip.message}</FieldTip> : null}
+            </label>
+          ) : null}
         </div>
         <div className="form-photo-row">
           <label className="field form-photo-field">
