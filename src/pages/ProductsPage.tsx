@@ -746,7 +746,9 @@ function ProductDialog({
       nombre: form.nombre.trim(),
       categoria: form.categoria,
       linea: form.linea.trim(),
-      fechaVencimiento: showsExpiry(form.categoria) ? form.fechaVencimiento : '',
+      ...(showsExpiry(form.categoria) && form.fechaVencimiento
+        ? { fechaVencimiento: form.fechaVencimiento }
+        : {}),
       // Se guarda costo y venta por unidad.
       costo: valorUnitario > 0 ? valorUnitario : Number(form.costo),
       precioVenta: Number(form.precioVenta),

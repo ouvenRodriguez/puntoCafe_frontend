@@ -2567,7 +2567,11 @@ h2,
 }
 
 .form-meta-row.is-single {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1.72fr) minmax(0, 0.28fr);
+}
+
+.form-meta-row.is-single .field:only-child {
+  grid-column: 1 / 2;
 }
 
 .field input[type='date'] {
