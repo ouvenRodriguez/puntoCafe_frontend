@@ -106,9 +106,9 @@ function rememberProductCategory(categoria: Category) {
   }
 }
 
-const emptyForm = (): ProductForm => ({
+const emptyForm = (categoria?: Category): ProductForm => ({
   nombre: '',
-  categoria: readLastProductCategory(),
+  categoria: categoria ?? readLastProductCategory(),
   linea: '',
   fechaVencimiento: '',
   costo: '',
@@ -295,6 +295,13 @@ export function ProductsPage() {
             type="button"
             onClick={() => {
               if (productDraftExpired()) clearProductNewDraft();
+              if (filter !== 'Todos') {
+                if (!productDraftHasContent()) {
+                  productNewDraft.form = emptyForm(filter);
+                } else {
+                  productNewDraft.form = { ...productNewDraft.form, categoria: filter };
+                }
+              }
               productNewDraft.open = true;
               productNewDraft.leftAt = 0;
               setEditor('new');
@@ -370,6 +377,7 @@ export function ProductsPage() {
       {editor ? (
         <ProductDialog
           product={editor === 'new' ? null : editor}
+          preferredCategory={filter === 'Todos' ? undefined : filter}
           onClose={() => setEditor(null)}
           onSaved={async () => {
             setEditor(null);
@@ -611,10 +619,12 @@ function FieldTip({ children }: { children: string }) {
 
 function ProductDialog({
   product,
+  preferredCategory,
   onClose,
   onSaved,
 }: {
   product: Product | null;
+  preferredCategory?: Category;
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
@@ -637,10 +647,16 @@ function ProductDialog({
     }
     if (productDraftExpired()) {
       clearProductNewDraft();
-      return emptyForm();
+      return emptyForm(preferredCategory);
     }
     productNewDraft.leftAt = 0;
-    return productDraftHasContent() ? { ...productNewDraft.form } : emptyForm();
+    if (productDraftHasContent()) {
+      return {
+        ...productNewDraft.form,
+        ...(preferredCategory ? { categoria: preferredCategory } : {}),
+      };
+    }
+    return emptyForm(preferredCategory);
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
